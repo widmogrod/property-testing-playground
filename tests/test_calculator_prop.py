@@ -4,6 +4,9 @@ from src.calculator import eval, Add, Mul, Lit, CalcDSL
 
 
 # Hypothesis strategy to generate random CalcDSL expressions.
+# TODO: highlight importance of this function.
+# if only thing that we could take from property testing is hypothesis and diverse input generation
+# then this is biggest win ever
 @st.composite
 def exprs(draw, max_depth=3):
     if max_depth <= 0:

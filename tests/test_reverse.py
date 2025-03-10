@@ -5,7 +5,7 @@ def test_reverse():
     assert reverse([1, 2, 3]) == [3, 2, 1]
 
 # what are problems with this test?
-# (group conversation)
+# TODO: group conversation
 #
 # - code coverage 100%
 # - happy path testing. when we write code and then test it, we naturally trust ourselves,
@@ -15,6 +15,7 @@ def test_reverse():
 #      especially for simpel functions
 # - what can be edge cases?
 #   - diverse inputs, mutation of list, instead of returning copy, empy list behaviour,...
+#     TODO: show example of diverse input, uncomment bad implementation in reverse.py
 # - How to get better and avoid those pratfalls?
 #   - if we cannot trust implementation, and implementation is black box,
 #     then we have to focus on verifying behaviour... but how to doit?
@@ -23,4 +24,4 @@ def test_reverse():
 #      - mutation testing does that for us automatically
 #    - but today, we will learn property testing.
 # - what are properties of reverse function?
-#    (group conversation)
+#   TODO: group conversation
