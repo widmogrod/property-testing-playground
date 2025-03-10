@@ -1,9 +1,16 @@
 [project]
 name = "property-testing-playground"
 version = "0.1.0"
-description = "Add your description here"
+description = "Demonstrate property testing with other techniques like mutation testing"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
+
+[dependency-groups]
+dev = [
     "hypothesis>=6.128.2",
+    "mutmut>=3.2.3",
+    "pytest>=8.3.5",
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
