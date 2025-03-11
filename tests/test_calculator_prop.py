@@ -7,6 +7,7 @@ from src.calculator import eval, Add, Mul, Lit, CalcDSL
 # TODO: highlight importance of this function.
 # if only thing that we could take from property testing is hypothesis and diverse input generation
 # then this is biggest win ever
+# TODO: history of one customer with very messy mongoDB data and Stevedore in cratedb
 @st.composite
 def exprs(draw, max_depth=3):
     if max_depth <= 0:
