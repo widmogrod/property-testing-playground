@@ -2,7 +2,7 @@ from src.unfold import unfold, fold
 
 
 def uf(x):
-    if x < 1:
+    if x <= 1:
         return ([x], None)
     if x % 2 == 0:
         # Even case: output digit is x//2 and next seed is x//2.
