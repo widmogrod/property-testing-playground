@@ -57,7 +57,7 @@ def infer_schema_from_one(data: Any) -> Schema:
                 types.add(infer_schema_from_one(item))
 
             if len(types) > 1:
-                return SList(SVariant(variants=types))
+                return SList(SVariant(variants=frozenset(types)))
             else:
                 return SList(next(iter(types)))
         case []:
@@ -65,15 +65,39 @@ def infer_schema_from_one(data: Any) -> Schema:
         case _:
             raise ValueError(f"Cannot infer schema for {type(data)}")
 
+def optimize_schema(schema: Schema) -> Schema:
+    match schema:
+        case SList(of):
+            return SList(of=optimize_schema(of))
+
+        case SVariant(variants=variants):
+            new_variants = set()
+            for variant in variants:
+                if isinstance(variant, SVariant):
+                    new_variants.update(optimize_schema(variant).variants)
+                else:
+                    new_variants.add(optimize_schema(variant))
+            return SVariant(variants=frozenset(new_variants))
+        case _:
+            return schema
+
+def flatten_variant(variants: frozenset) -> frozenset:
+    result = set()
+    for v in variants:
+        if isinstance(v, SVariant):
+            result.update(flatten_variant(v.variants))
+        else:
+            result.add(v)
+    return frozenset(result)
+
+def make_variant(variants: frozenset) -> Schema:
+    if len(variants) == 1:
+        return next(iter(variants))
+    return SVariant(variants=variants)
 
 def merge_schemas(a: Schema, b: Schema) -> Schema:
     if a == b:
         return a
-
-    def make_variant(variants: frozenset) -> Schema:
-        if len(variants) == 1:
-            return next(iter(variants))
-        return SVariant(variants=variants)
 
     match (a, b):
         case (SPrimitive(_), SPrimitive(_)):
@@ -85,8 +109,14 @@ def merge_schemas(a: Schema, b: Schema) -> Schema:
                 return SList(of=schema_a)
             return SList(of=merge_schemas(schema_a, schema_b))
         case (SVariant(variants=variants_a), SVariant(variants=variants_b)):
-            return make_variant(variants_a.union(variants_b))
+            # Flatten nested variants
+            flattened_a = flatten_variant(variants_a)
+            flattened_b = flatten_variant(variants_b)
+            return make_variant(flattened_a.union(flattened_b))
         case (SVariant(variants=variants), other) | (other, SVariant(variants=variants)):
-            return make_variant(variants.union({other}))
+            # Flatten variant and add the other schema
+            flattened = flatten_variant(variants)
+            return make_variant(flattened.union(frozenset({other})))
         case _:
-            return make_variant(frozenset({a, b}))
+            return make_variant(flatten_variant(frozenset({a, b})))
+

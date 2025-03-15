@@ -4,7 +4,7 @@ from typing import NoReturn
 from hypothesis import given, note, assume, strategies as st
 
 from src.schema.schema import Schema, SPrimitive, SList, PInt, SVariant, PBool, PBit, \
-    infer_schema_from_list, merge_schemas
+    infer_schema_from_list, merge_schemas, optimize_schema
 
 
 def assert_never(x: NoReturn) -> NoReturn:
@@ -38,9 +38,10 @@ def gen_data(draw: st.DrawFn, schema: Schema) -> Any:
         case _:
             assert_never(schema)
 
+MAX_DEPTH = 3
 
 @st.composite
-def gen_schema(draw: st.DrawFn, seed: int = 42, max_depth: int = 3) -> Schema:
+def gen_schema(draw: st.DrawFn, seed: int = 42, max_depth: int = MAX_DEPTH) -> Schema:
     primitive = st.one_of(
         st.builds(PInt),
         st.builds(PBool),
@@ -50,20 +51,25 @@ def gen_schema(draw: st.DrawFn, seed: int = 42, max_depth: int = 3) -> Schema:
     if max_depth <= 0:
         return SPrimitive(draw(primitive))
 
+    # Variant type cannot be on the top level,
+    # because then hypothesis can go into generating only one flavour of data
+    # and purpose of this function is to generate data that represent complete schema definition
+    if max_depth < MAX_DEPTH:
+        return draw(st.builds(SVariant,
+                  st.builds(frozenset,
+                            st.sets(gen_schema(seed=seed, max_depth=max_depth - 1),
+                                    min_size=2))))
+
     return draw(st.one_of(
         st.builds(SPrimitive, primitive),
         st.builds(SList, gen_schema(seed=seed, max_depth=max_depth - 1)),
-        st.builds(SVariant,
-                  st.builds(frozenset,
-                            st.sets(gen_schema(seed=seed, max_depth=max_depth - 1),
-                                    min_size=2)))
     ))
 
 
 @given(schema=gen_schema(), data=st.data())
-def test_schema_prop(schema: Schema, data):
+def test_if_schema_inference_works(schema: Schema, data):
+    schema = optimize_schema(schema)
     D = [data.draw(gen_data(schema=schema)) for _ in range(10)]
-    assume(len(set(map(repr, D))) == 10)
     S1 = infer_schema_from_list(D)
     note(f"schema={schema}")
     note(f"data={D}")
@@ -73,11 +79,13 @@ def test_schema_prop(schema: Schema, data):
     # [1,2,3].fold(0, (x, acc) => x + acc)) == 6
     # 6.unfold((x) => ...) == [1,2,3]
 
+
 @given(schema=gen_schema())
-def test_schema_merging_indempotence(schema: Schema):
+def test_if_merging_is_invariance(schema: Schema):
     assert merge_schemas(schema, schema) == schema
 
+
 @given(a=gen_schema(), b=gen_schema())
-def test_schema_merging_identity(a: Schema, b: Schema):
+def test_if_schema_merging_is_commutative(a: Schema, b: Schema):
     assume(a != b)
     assert merge_schemas(a, b) == merge_schemas(b, a)
