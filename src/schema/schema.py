@@ -65,22 +65,6 @@ def infer_schema_from_one(data: Any) -> Schema:
         case _:
             raise ValueError(f"Cannot infer schema for {type(data)}")
 
-def optimize_schema(schema: Schema) -> Schema:
-    match schema:
-        case SList(of):
-            return SList(of=optimize_schema(of))
-
-        case SVariant(variants=variants):
-            new_variants = set()
-            for variant in variants:
-                if isinstance(variant, SVariant):
-                    new_variants.update(optimize_schema(variant).variants)
-                else:
-                    new_variants.add(optimize_schema(variant))
-            return SVariant(variants=frozenset(new_variants))
-        case _:
-            return schema
-
 def flatten_variant(variants: frozenset) -> frozenset:
     result = set()
     for v in variants:

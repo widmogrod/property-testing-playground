@@ -4,7 +4,7 @@ from typing import NoReturn
 from hypothesis import given, note, assume, strategies as st
 
 from src.schema.schema import Schema, SPrimitive, SList, PInt, SVariant, PBool, PBit, \
-    infer_schema_from_list, merge_schemas, optimize_schema
+    infer_schema_from_list, merge_schemas
 
 
 def assert_never(x: NoReturn) -> NoReturn:
@@ -38,7 +38,9 @@ def gen_data(draw: st.DrawFn, schema: Schema) -> Any:
         case _:
             assert_never(schema)
 
+
 MAX_DEPTH = 3
+
 
 @st.composite
 def gen_schema(draw: st.DrawFn, seed: int = 42, max_depth: int = MAX_DEPTH) -> Schema:
@@ -51,14 +53,20 @@ def gen_schema(draw: st.DrawFn, seed: int = 42, max_depth: int = MAX_DEPTH) -> S
     if max_depth <= 0:
         return SPrimitive(draw(primitive))
 
-    # Variant type cannot be on the top level,
-    # because then hypothesis can go into generating only one flavour of data
-    # and purpose of this function is to generate data that represent complete schema definition
-    if max_depth < MAX_DEPTH:
+    # max_depth < MAX_DEPTH:
+    #  Variant type cannot be on the top level,
+    #   because then hypothesis can go into generating only one flavour of data
+    #   and purpose of this function is to generate data that represent complete schema definition
+    # max_depth % 2 == 0:
+    #  Variant(1, 2) === Variant(Variant(1,2))
+    #   semantic this is equal
+    #   but __eq__ treat those values as different
+    #   generating variants every second level will help to avoid need of searching for other solutions
+    if max_depth < MAX_DEPTH and max_depth % 2 == 0:
         return draw(st.builds(SVariant,
-                  st.builds(frozenset,
-                            st.sets(gen_schema(seed=seed, max_depth=max_depth - 1),
-                                    min_size=2))))
+                              st.builds(frozenset,
+                                        st.sets(gen_schema(seed=seed, max_depth=max_depth - 1),
+                                                min_size=2))))
 
     return draw(st.one_of(
         st.builds(SPrimitive, primitive),
@@ -68,7 +76,6 @@ def gen_schema(draw: st.DrawFn, seed: int = 42, max_depth: int = MAX_DEPTH) -> S
 
 @given(schema=gen_schema(), data=st.data())
 def test_if_schema_inference_works(schema: Schema, data):
-    schema = optimize_schema(schema)
     D = [data.draw(gen_data(schema=schema)) for _ in range(10)]
     S1 = infer_schema_from_list(D)
     note(f"schema={schema}")
