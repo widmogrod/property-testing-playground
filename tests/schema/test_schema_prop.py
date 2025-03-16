@@ -1,3 +1,4 @@
+# mypy: disable-error-code="misc"
 from typing import Any
 from typing import NoReturn
 
@@ -106,31 +107,35 @@ def gen_schema(draw: st.DrawFn, max_depth: int = MAX_DEPTH) -> Schema:
     #   but __eq__ treat those values as different
     #   generating variants every second level will help to avoid need of searching for other solutions
     if max_depth < MAX_DEPTH and max_depth % 2 == 0:
-        return draw(gen_schema_variant(max_depth=max_depth))
+        variant_result: Schema = draw(gen_schema_variant(max_depth=max_depth))
+        return variant_result
 
-    return draw(
+    other_result: Schema = draw(
         st.one_of(
             st.builds(SPrimitive, primitive),
             st.builds(SList, gen_schema(max_depth=max_depth - 1)),
             st.builds(SList, st.just(None)),
         )
     )
+    return other_result
 
 
 @st.composite
 def gen_schema_variant(draw: st.DrawFn, max_depth: int = 2) -> Schema:
-    return draw(
+    result: Schema = draw(
         st.builds(
             SVariant,
             st.builds(
-                frozenset, st.sets(gen_schema(max_depth=max_depth - 1), min_size=2)
+                frozenset[Schema],
+                st.sets(gen_schema(max_depth=max_depth - 1), min_size=2),
             ),
         )
     )
+    return result
 
 
 @given(schema=gen_schema(), data=st.data())
-def test_if_schema_inference_works(schema: Schema, data: st.DataObject):
+def test_if_schema_inference_works(schema: Schema, data: st.DataObject) -> None:
     D = [data.draw(gen_data(schema=schema)) for _ in range(10)]
     S1 = infer_schema_from_list(D)
     note(f"schema={schema}")
@@ -143,12 +148,12 @@ def test_if_schema_inference_works(schema: Schema, data: st.DataObject):
 
 
 @given(schema=gen_schema())
-def test_if_merging_is_invariance(schema: Schema):
+def test_if_merging_is_invariance(schema: Schema) -> None:
     assert merge_schemas(schema, schema) == schema
 
 
 @given(a=gen_schema(), b=gen_schema())
-def test_if_schema_merging_is_commutative(a: Schema, b: Schema):
+def test_if_schema_merging_is_commutative(a: Schema, b: Schema) -> None:
     assume(a != b)
     assert merge_schemas(a, b) == merge_schemas(b, a)
 
@@ -156,13 +161,13 @@ def test_if_schema_merging_is_commutative(a: Schema, b: Schema):
 # @example(data=0.0).xfail(raises=ValueError)
 # @example(data=None).xfail(raises=ValueError)
 @given(data=gen_not_implemented_data())
-def test_that_infer_schema_fails_on_unknown_data(data: Any):
+def test_that_infer_schema_fails_on_unknown_data(data: Any) -> None:
     with rises(ValueError):
         infer_schema_from_one(data)
 
 
 @given(variant=gen_schema_variant(), data=st.data())
-def test_variant_generation(variant: Schema, data: st.DataObject):
+def test_variant_generation(variant: SVariant, data: st.DataObject) -> None:
     assume(len(variant.variants) >= 2)
     D1 = data.draw(gen_data(schema=variant))
     D2 = data.draw(gen_data(schema=variant))

@@ -1,3 +1,4 @@
+# mypy: disable-error-code="misc"
 from typing import Any, Callable, List
 
 import pytest
@@ -15,9 +16,9 @@ Reversible = Callable[[List[Any]], List[Any]]
         reverse,
     ],
 )
-def test_spec_reversible_func(reversible: Reversible):
+def test_spec_reversible_func(reversible: Reversible) -> None:
     @given(st.lists(st.integers()), st.lists(st.integers()))
-    def give_properties(input: List[Any], input2: List[Any]):
+    def give_properties(input: List[Any], input2: List[Any]) -> None:
         assert reversible(reversible(input)) == input, (
             "reversing twice must result in original"
         )
@@ -35,7 +36,7 @@ def test_spec_reversible_func(reversible: Reversible):
 
     give_properties()
 
-    def symetry_property(list: List[Any]):
+    def symetry_property(list: List[Any]) -> None:
         assert reversible(list) == list, "reverse of symmetric lists must be symmetric"
 
     empty_list: List[Any] = []

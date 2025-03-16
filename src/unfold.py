@@ -1,14 +1,15 @@
-from typing import TypeVar, Callable, Tuple, List
+from typing import TypeVar, Callable, Tuple, List, Optional
 
 A = TypeVar("A")
 B = TypeVar("B")
 
 
-def unfold(seed: A, f: Callable[[A], Tuple[List[B], A | None]]) -> List[B]:
+def unfold(seed: A, f: Callable[[A], Tuple[List[B], Optional[A]]]) -> List[B]:
     result = []
-    # Continue until the seed becomes 0 (or any falsy value)
-    while seed:
-        digits, seed = f(seed)
+    current: Optional[A] = seed
+    # Continue until the seed becomes None
+    while current is not None:
+        digits, current = f(current)
         result.extend(digits)
 
     return result[::-1]

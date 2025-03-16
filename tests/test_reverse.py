@@ -1,7 +1,7 @@
 from src.reverse import reverse
 
 
-def test_reverse():
+def test_reverse() -> None:
     assert reverse([1, 2, 3]) == [3, 2, 1]
 
 
