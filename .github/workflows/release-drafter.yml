@@ -9,10 +9,9 @@ on:
 
   # pull_request event is required only for autolabeler
   pull_request:
-    # Only following types are handled by the action, but one can default to all as well
-    types: [ opened, reopened, synchronize ]
-  pull_request_target:
-    types: [ opened, reopened, synchronize ]
+#    types: [ opened, reopened, synchronize ]
+#  pull_request_target:
+#    types: [ opened, reopened, synchronize ]
 
 permissions:
   contents: read
