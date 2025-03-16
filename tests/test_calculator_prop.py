@@ -18,8 +18,12 @@ def exprs(draw, max_depth=3):
         # Randomly choose between a literal, an addition, or a multiplication node.
         strategy = st.one_of(
             st.builds(Lit, st.integers(min_value=-100, max_value=100)),
-            st.builds(Add, exprs(max_depth=max_depth - 1), exprs(max_depth=max_depth - 1)),
-            st.builds(Mul, exprs(max_depth=max_depth - 1), exprs(max_depth=max_depth - 1))
+            st.builds(
+                Add, exprs(max_depth=max_depth - 1), exprs(max_depth=max_depth - 1)
+            ),
+            st.builds(
+                Mul, exprs(max_depth=max_depth - 1), exprs(max_depth=max_depth - 1)
+            ),
         )
         return draw(strategy)
 

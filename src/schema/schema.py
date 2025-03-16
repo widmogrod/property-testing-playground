@@ -63,8 +63,10 @@ def infer_schema_from_one(data: Any) -> Schema:
         case _:
             raise ValueError(f"Cannot infer schema for {type(data)}")
 
+
 def make_variant(variants: frozenset) -> Schema:
     return SVariant(variants=variants)
+
 
 def merge_schemas(a: Schema, b: Schema) -> Schema:
     if a == b:

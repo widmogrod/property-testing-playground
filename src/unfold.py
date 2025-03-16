@@ -13,6 +13,7 @@ def unfold(seed: A, f: Callable[[A], Tuple[List[B], A | None]]) -> List[B]:
 
     return result[::-1]
 
+
 def fold(xs: List[B], result: A, f: Callable[[B, A], A]) -> A:
     for x in xs:
         result = f(x, result)

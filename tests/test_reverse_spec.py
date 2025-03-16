@@ -8,6 +8,7 @@ from src.reverse import reverse
 # Define the higher-order type
 Reversible = Callable[[List[Any]], List[Any]]
 
+
 @pytest.mark.parametrize(
     "reversible",
     [
@@ -17,9 +18,9 @@ Reversible = Callable[[List[Any]], List[Any]]
 def test_spec_reversible_func(reversible: Reversible):
     @given(st.lists(st.integers()), st.lists(st.integers()))
     def give_properties(input: List[Any], input2: List[Any]):
-        assert (
-                reversible(reversible(input)) == input
-        ), "reversing twice must result in original"
+        assert reversible(reversible(input)) == input, (
+            "reversing twice must result in original"
+        )
         assert len(reversible(input)) == len(input), "reverse preserve length of list"
         assert set(reversible(input)) == set(input), "reverse preserve elements"
 
