@@ -4,8 +4,18 @@ from typing import NoReturn
 from hypothesis import given, note, assume, strategies as st
 from pytest import raises as rises
 
-from src.schema.schema import Schema, SPrimitive, SList, PInt, SVariant, PBool, PBit, \
-    infer_schema_from_list, merge_schemas, infer_schema_from_one
+from src.schema.schema import (
+    Schema,
+    SPrimitive,
+    SList,
+    PInt,
+    SVariant,
+    PBool,
+    PBit,
+    infer_schema_from_list,
+    merge_schemas,
+    infer_schema_from_one,
+)
 
 
 def assert_never(x: NoReturn) -> NoReturn:
@@ -22,19 +32,19 @@ def gen_not_implemented_data(draw: st.DrawFn, max_depth: int = 3) -> Any:
         st.floats(allow_nan=False, allow_infinity=False),
         st.decimals(allow_nan=False, allow_infinity=False),
         st.text(),
-        st.dates()
+        st.dates(),
     )
 
     recursive_lists = st.recursive(
         base,
         lambda children: st.lists(children, min_size=1, max_size=5),
-        max_leaves=max_depth
+        max_leaves=max_depth,
     )
 
     recursive_dicts = st.recursive(
         st.dictionaries(st.text(), base),
         lambda children: st.dictionaries(st.text(), children),
-        max_leaves=max_depth
+        max_leaves=max_depth,
     )
 
     return draw(st.one_of(base, recursive_lists, recursive_dicts))
@@ -59,8 +69,10 @@ def gen_data(draw: st.DrawFn, schema: Schema) -> Any:
             if not s:
                 return []
 
-            return [draw(gen_data(schema=s))
-                    for _ in range(draw(st.integers(min_value=1, max_value=10)))]
+            return [
+                draw(gen_data(schema=s))
+                for _ in range(draw(st.integers(min_value=1, max_value=10)))
+            ]
         case SVariant(variants):
             chosen_schema = draw(st.sampled_from(list(variants)))
             return draw(gen_data(schema=chosen_schema))
@@ -76,7 +88,9 @@ def gen_schema(draw: st.DrawFn, max_depth: int = MAX_DEPTH) -> Schema:
     primitive = st.one_of(
         st.builds(PInt),
         st.builds(PBool),
-        st.builds(PBit, st.integers(min_value=1, max_value=10).map(lambda x: x * 8))  # forces multiples of 8
+        st.builds(
+            PBit, st.integers(min_value=1, max_value=10).map(lambda x: x * 8)
+        ),  # forces multiples of 8
     )
 
     if max_depth <= 0:
@@ -94,19 +108,25 @@ def gen_schema(draw: st.DrawFn, max_depth: int = MAX_DEPTH) -> Schema:
     if max_depth < MAX_DEPTH and max_depth % 2 == 0:
         return draw(gen_schema_variant(max_depth=max_depth))
 
-    return draw(st.one_of(
-        st.builds(SPrimitive, primitive),
-        st.builds(SList, gen_schema(max_depth=max_depth - 1)),
-        st.builds(SList, st.just(None))
-    ))
+    return draw(
+        st.one_of(
+            st.builds(SPrimitive, primitive),
+            st.builds(SList, gen_schema(max_depth=max_depth - 1)),
+            st.builds(SList, st.just(None)),
+        )
+    )
 
 
 @st.composite
 def gen_schema_variant(draw: st.DrawFn, max_depth: int = 2) -> Schema:
-    return draw(st.builds(SVariant,
-                          st.builds(frozenset,
-                                    st.sets(gen_schema(max_depth=max_depth - 1),
-                                            min_size=2))))
+    return draw(
+        st.builds(
+            SVariant,
+            st.builds(
+                frozenset, st.sets(gen_schema(max_depth=max_depth - 1), min_size=2)
+            ),
+        )
+    )
 
 
 @given(schema=gen_schema(), data=st.data())

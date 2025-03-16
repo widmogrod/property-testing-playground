@@ -23,4 +23,4 @@ def test_unfold_2():
     I2 = fold(L, 0, lambda x, acc: x + acc)
     assert I1 == I2
 
-    #TODO this structure has a name. Hylomorphism
+    # TODO this structure has a name. Hylomorphism
