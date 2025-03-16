@@ -1,3 +1,4 @@
+# mypy: disable-error-code="misc"
 from hypothesis import given, strategies as st
 
 from src.calculator import eval, Add, Mul, Lit, CalcDSL
@@ -9,7 +10,7 @@ from src.calculator import eval, Add, Mul, Lit, CalcDSL
 # then this is biggest win ever
 # TODO: history of one customer with very messy mongoDB data and Stevedore in cratedb
 @st.composite
-def exprs(draw, max_depth=3):
+def exprs(draw: st.DrawFn, max_depth: int = 3) -> CalcDSL:
     if max_depth <= 0:
         # Base case: just a literal integer.
         n = draw(st.integers(min_value=-100, max_value=100))
@@ -25,12 +26,13 @@ def exprs(draw, max_depth=3):
                 Mul, exprs(max_depth=max_depth - 1), exprs(max_depth=max_depth - 1)
             ),
         )
-        return draw(strategy)
+        expr: CalcDSL = draw(strategy)
+        return expr
 
 
 # Property test: eval always returns an integer.
 @given(expr=exprs())
-def test_eval_returns_int(expr: CalcDSL):
+def test_eval_returns_int(expr: CalcDSL) -> None:
     result = eval(expr)
     assert isinstance(result, int)
 
@@ -38,7 +40,7 @@ def test_eval_returns_int(expr: CalcDSL):
 # Property test: Addition identity.
 # For any expression, adding zero should yield the same result.
 @given(expr=exprs())
-def test_addition_identity(expr: CalcDSL):
+def test_addition_identity(expr: CalcDSL) -> None:
     # 0 + 3 = 3
     base_result = eval(expr)
     assert eval(Add(expr, Lit(0))) == base_result
@@ -48,7 +50,7 @@ def test_addition_identity(expr: CalcDSL):
 # Property test: Multiplication identity.
 # Multiplying by one should yield the same result.
 @given(expr=exprs())
-def test_multiplication_identity(expr: CalcDSL):
+def test_multiplication_identity(expr: CalcDSL) -> None:
     # 1 * 3 = 3
     base_result = eval(expr)
     assert eval(Mul(expr, Lit(1))) == base_result
@@ -57,27 +59,27 @@ def test_multiplication_identity(expr: CalcDSL):
 
 # Property test: Commutativity of addition.
 @given(a=exprs(), b=exprs())
-def test_add_commutativity(a: CalcDSL, b: CalcDSL):
+def test_add_commutativity(a: CalcDSL, b: CalcDSL) -> None:
     # 2 + 3 == 3 + 2
     assert eval(Add(a, b)) == eval(Add(b, a))
 
 
 # Property test: Commutativity of multiplication.
 @given(a=exprs(), b=exprs())
-def test_mul_commutativity(a: CalcDSL, b: CalcDSL):
+def test_mul_commutativity(a: CalcDSL, b: CalcDSL) -> None:
     # 2 * 3 == 3 * 2
     assert eval(Mul(a, b)) == eval(Mul(b, a))
 
 
 # Property test: Associativity of addition.
 @given(a=exprs(), b=exprs(), c=exprs())
-def test_add_associativity(a: CalcDSL, b: CalcDSL, c: CalcDSL):
+def test_add_associativity(a: CalcDSL, b: CalcDSL, c: CalcDSL) -> None:
     # (2 + 3) + 4 == 2 + (3 + 4)
     assert eval(Add(Add(a, b), c)) == eval(Add(a, Add(b, c)))
 
 
 # Property test: Associativity of multiplication.
 @given(a=exprs(), b=exprs(), c=exprs())
-def test_mul_associativity(a: CalcDSL, b: CalcDSL, c: CalcDSL):
+def test_mul_associativity(a: CalcDSL, b: CalcDSL, c: CalcDSL) -> None:
     # (2 * 3) * 4 == 2 * (3 * 4)
     assert eval(Mul(Mul(a, b), c)) == eval(Mul(a, Mul(b, c)))

@@ -1,9 +1,11 @@
+# mypy: disable-error-code="misc"
 from hypothesis import given, strategies as st
 
 from src.unfold import unfold, fold
+from typing import Optional
 
 
-def uf(x):
+def uf(x: int) -> tuple[list[int], Optional[int]]:
     if x < 1:
         return ([x], None)
     if x % 2 == 0:
@@ -15,7 +17,7 @@ def uf(x):
 
 
 @given(st.integers())
-def test_unfold_prop(x: int):
+def test_unfold_prop(x: int) -> None:
     L = unfold(x, uf)
     y = fold(L, 0, lambda x, acc: x + acc)
     assert x == y

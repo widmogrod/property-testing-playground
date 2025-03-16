@@ -64,7 +64,7 @@ def infer_schema_from_one(data: Any) -> Schema:
             raise ValueError(f"Cannot infer schema for {type(data)}")
 
 
-def make_variant(variants: frozenset) -> Schema:
+def make_variant(variants: frozenset[Schema]) -> Schema:
     return SVariant(variants=variants)
 
 
