@@ -23,7 +23,7 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run pytest --cov=src/ tests/
+          uv run pytest --cov-branch --cov-report=xml --cov=src/ tests/
 
       - name: Upload pytest report
         uses: actions/upload-artifact@v4
