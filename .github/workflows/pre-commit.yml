@@ -1,0 +1,44 @@
+name: Pre-commit Checks
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.10, 3.11, 3.12]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'uv'
+
+      - name: Install uv
+        run: |
+          python -m pip install --upgrade pip
+          pip install uv
+
+      - name: Run pre-commit
+        uses: pre-commit/action@v3.0.1
+        with:
+          extra_args: --all-files
+
+      - name: Annotate mypy errors
+        if: ${{ failure() }}
+        uses: rberlind/mypy-annotate@v1.0.0
+        with:
+          mypy_path: ".mypy_cache"
+
+      - name: Annotate ruff errors
+        if: ${{ failure() }}
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: check --output-format=github
