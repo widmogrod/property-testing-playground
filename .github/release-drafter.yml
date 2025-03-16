@@ -1,0 +1,76 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+categories:
+  - title: '🚀 Features'
+    labels:
+      - 'feat'
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'bug'
+      - 'fix'
+  - title: '🧰 Maintenance'
+    labels:
+      - 'chore'
+      - 'docs'
+      - 'style'
+      - 'refactor'
+      - 'perf'
+      - 'test'
+      - 'build'
+      - 'ci'
+      - 'revert'
+  - title: '⬆️ Dependencies'
+    collapse-after: 3
+    labels:
+      - 'dependencies'
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+version-resolver:
+  major:
+    labels:
+      - 'major'
+  minor:
+    labels:
+      - 'minor'
+  patch:
+    labels:
+      - 'patch'
+  default: patch
+autolabeler:
+  - label: 'chore'
+    title:
+      - '/^chore(\([^)]+\))?!?:\s/i'
+  - label: 'bug'
+    title:
+      - '/^fix(\([^)]+\))?!?:\s/i'
+  - label: 'enhancement'
+    title:
+      - '/^feat(\([^)]+\))?!?:\s/i'
+  - label: 'docs'
+    title:
+      - '/^docs(\([^)]+\))?!?:\s/i'
+  - label: 'style'
+    title:
+      - '/^style(\([^)]+\))?!?:\s/i'
+  - label: 'refactor'
+    title:
+      - '/^refactor(\([^)]+\))?!?:\s/i'
+  - label: 'perf'
+    title:
+      - '/^perf(\([^)]+\))?!?:\s/i'
+  - label: 'test'
+    title:
+      - '/^test(\([^)]+\))?!?:\s/i'
+  - label: 'build'
+    title:
+      - '/^build(\([^)]+\))?!?:\s/i'
+  - label: 'ci'
+    title:
+      - '/^ci(\([^)]+\))?!?:\s/i'
+  - label: 'revert'
+    title:
+      - '/^revert(\([^)]+\))?!?:\s/i'
+template: |
+  ## Changes
+
+  $CHANGES
