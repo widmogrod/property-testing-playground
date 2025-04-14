@@ -1,5 +1,6 @@
 import logging
 from contextlib import contextmanager
+from typing import ContextManager, Iterator
 from unittest.mock import patch
 
 import pytest
@@ -7,14 +8,14 @@ import pytest
 
 class DatabaseConfig:
     @staticmethod
-    def connection():
-        return None
+    def connection() -> ContextManager[None]:
+        yield
 
 
 class SomeService:
-    def do_action(self):
+    def do_action(self) -> None:
         try:
-            with DatabaseConfig.connection() as conn:
+            with DatabaseConfig.connection():
                 pass
         except ConnectionError as e:
             logging.error("Failed to connect to the database")
@@ -27,33 +28,39 @@ class SomeService:
             # raise ConnectionError(str(e)) from e
 
 
+# mypy: disable-error-code=misc
 @pytest.fixture
-def mock_service():
+def mock_service() -> SomeService:
     return SomeService()
 
 
-def test_that_dont_test_implementation_but_it_looks_like(mock_service, caplog):
+def test_that_dont_test_implementation_but_it_looks_like(
+    mock_service: SomeService, caplog: pytest.LogCaptureFixture
+) -> None:
     caplog.set_level(logging.ERROR)
 
     @contextmanager
-    def fake_connection_error():
+    def fake_connection_error() -> Iterator[None]:
+        # problem: missing yield
+        # yield
         raise ConnectionError("Connection failed")
 
     with pytest.raises(ConnectionError, match="Connection failed"):
         # Use the current module reference
         with patch.object(
-                DatabaseConfig,
-                "connection",
-                # problem: fake_connection_error() called rise exception imminently
-                # problem: no use of use_effect
-                # problem: setup of behaviour insite of rises instead outside
-                return_value=fake_connection_error(),
+            DatabaseConfig,
+            "connection",
+            # problem: fake_connection_error() called rise exception imminently, its missing yield (mypy complies about it)
+            # problem: no use of use_effect
+            # problem: setup of behaviour insite of rises instead outside (linter: flake8-pytest-style  would catch it)
+            return_value=fake_connection_error(),
         ):
             mock_service.do_action()
 
             # problem: unreachable code due to exception being mock
             # problem: using logs for test assertions
             assert "Failed to connect to the database" in caplog.text
+
 
 
 # def test_that_test_implementation(mock_service, caplog):
