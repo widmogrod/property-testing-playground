@@ -1,4 +1,4 @@
-from src.calculator import eval, Add, Mul, Lit
+from src.calculator import Add, Lit, Mul, eval
 
 
 def test_calculator() -> None:

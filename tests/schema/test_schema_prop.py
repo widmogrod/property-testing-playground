@@ -1,26 +1,26 @@
 # mypy: disable-error-code="misc"
-from typing import Any
-from typing import NoReturn
+from typing import Any, NoReturn
 
-from hypothesis import given, note, assume, strategies as st
-from pytest import raises as rises
+import pytest
+from hypothesis import assume, given, note
+from hypothesis import strategies as st
 
 from src.schema.schema import (
-    Schema,
-    SPrimitive,
-    SList,
-    PInt,
-    SVariant,
-    PBool,
     PBit,
+    PBool,
+    PInt,
+    Schema,
+    SList,
+    SPrimitive,
+    SVariant,
     infer_schema_from_list,
-    merge_schemas,
     infer_schema_from_one,
+    merge_schemas,
 )
 
 
 def assert_never(x: NoReturn) -> NoReturn:
-    assert False, "Unhandled type: {}".format(type(x).__name__)
+    pytest.fail(f"Unhandled type: {type(x).__name__}")
 
 
 @st.composite
@@ -99,13 +99,13 @@ def gen_schema(draw: st.DrawFn, max_depth: int = MAX_DEPTH) -> Schema:
 
     # max_depth < MAX_DEPTH:
     #  Variant type cannot be on the top level,
-    #   because then hypothesis can go into generating only one flavour of data
-    #   and purpose of this function is to generate data that represent complete schema definition
+    #   because then hypothesis can generate only one flavour of data
+    #   and purpose is to generate data for complete schema definition
     # max_depth % 2 == 0:
     #  Variant(1, 2) === Variant(Variant(1,2))
-    #   semantic this is equal
-    #   but __eq__ treat those values as different
-    #   generating variants every second level will help to avoid need of searching for other solutions
+    #   semantically equal
+    #   but __eq__ treats those values as different
+    #   generating variants every second level helps avoid extra solutions
     if max_depth < MAX_DEPTH and max_depth % 2 == 0:
         variant_result: Schema = draw(gen_schema_variant(max_depth=max_depth))
         return variant_result
@@ -162,7 +162,7 @@ def test_if_schema_merging_is_commutative(a: Schema, b: Schema) -> None:
 # @example(data=None).xfail(raises=ValueError)
 @given(data=gen_not_implemented_data())
 def test_that_infer_schema_fails_on_unknown_data(data: Any) -> None:
-    with rises(ValueError):
+    with pytest.raises(ValueError, match="Cannot infer schema for"):
         infer_schema_from_one(data)
 
 

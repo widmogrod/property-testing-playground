@@ -1,7 +1,6 @@
 import functools
 from dataclasses import dataclass
-from typing import List, Any
-from typing import Set, Optional
+from typing import Any, List, Optional, Set
 
 
 @dataclass(frozen=True)
@@ -49,7 +48,7 @@ def infer_schema_from_one(data: Any) -> Schema:
             return SPrimitive(PInt())
         case bytes():
             return SPrimitive(PBit(len(data) * 8))
-        case [first, *rest]:  # Matches a list of any size (at least one element)
+        case [first, *rest]:  # Matches list of any size (at least one element)
             types: Set[Schema] = {infer_schema_from_one(first)}
             for item in rest:
                 types.add(infer_schema_from_one(item))

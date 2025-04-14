@@ -1,0 +1,86 @@
+import logging
+from contextlib import contextmanager
+from typing import ContextManager, Iterator
+from unittest.mock import patch
+
+import pytest
+
+
+class DatabaseConfig:
+    @staticmethod
+    def connection() -> ContextManager[None]:
+        yield
+
+
+class SomeService:
+    def do_action(self) -> None:
+        try:
+            with DatabaseConfig.connection():
+                pass
+        except ConnectionError as e:
+            logging.error("Failed to connect to the database")
+            # problem: does not forward message
+            raise ConnectionError from e
+            # solution a: call raise
+            # raise
+            # raise e
+            # solution b :re-raise new error with the same message
+            # raise ConnectionError(str(e)) from e
+
+
+# mypy: disable-error-code=misc
+@pytest.fixture
+def mock_service() -> SomeService:
+    return SomeService()
+
+
+def test_that_dont_test_implementation_but_it_looks_like(
+    mock_service: SomeService, caplog: pytest.LogCaptureFixture
+) -> None:
+    caplog.set_level(logging.ERROR)
+
+    @contextmanager
+    def fake_connection_error() -> Iterator[None]:
+        # problem: missing yield
+        # yield
+        raise ConnectionError("Connection failed")
+
+    # PT012 pytest.raises() block should contain a single simple statement
+    with pytest.raises(ConnectionError, match="Connection failed"):
+        # Use the current module reference
+        with patch.object(
+            DatabaseConfig,
+            "connection",
+            # problem: fake_connection_error() called rise exception imminently, its missing yield (mypy complies about it)
+            # problem: no use of use_effect
+            # problem: setup of behaviour insite of rises instead outside (linter: flake8-pytest-style  would catch it)
+            return_value=fake_connection_error(),
+        ):
+            mock_service.do_action()
+
+            # problem: unreachable code due to exception being mock
+            # problem: using logs for test assertions
+            assert "Failed to connect to the database" in caplog.text
+
+
+# def test_that_test_implementation(mock_service, caplog):
+#     caplog.set_level(logging.ERROR)
+#
+#     with patch.object(
+#             DatabaseConfig,
+#             "connection",
+#             side_effect=ConnectionError("Connection failed"),
+#     ):
+#         with pytest.raises(ConnectionError, match="Connection failed"):
+#             # Use the current module reference
+#             mock_service.do_action()
+#
+#
+#     assert "Failed to connect to the database" in caplog.text
+
+
+# Solutions to this issue:
+# - code coverage will show that except block is not tested
+# - mutation testing would reveal test issues
+# - linters like flake8-pytest-style and mypy would complain
+# - TDD would prevent this issue
