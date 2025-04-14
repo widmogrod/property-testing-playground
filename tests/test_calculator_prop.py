@@ -1,7 +1,8 @@
 # mypy: disable-error-code="misc"
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
-from src.calculator import eval, Add, Mul, Lit, CalcDSL
+from src.calculator import Add, CalcDSL, Lit, Mul, eval
 
 
 # Hypothesis strategy to generate random CalcDSL expressions.

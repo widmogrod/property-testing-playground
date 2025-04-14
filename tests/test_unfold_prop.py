@@ -1,8 +1,10 @@
 # mypy: disable-error-code="misc"
-from hypothesis import given, strategies as st
-
-from src.unfold import unfold, fold
 from typing import Optional
+
+from hypothesis import given
+from hypothesis import strategies as st
+
+from src.unfold import fold, unfold
 
 
 def uf(x: int) -> tuple[list[int], Optional[int]]:

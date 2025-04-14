@@ -1,7 +1,6 @@
-from src.unfold import unfold, fold
-
-
 from typing import Optional
+
+from src.unfold import fold, unfold
 
 
 def uf(x: int) -> tuple[list[int], Optional[int]]:

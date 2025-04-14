@@ -1,7 +1,8 @@
 # mypy: disable-error-code="misc"
 from typing import Any, List
 
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
 from src.reverse import reverse
 

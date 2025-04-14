@@ -33,7 +33,7 @@ def eval(dsl: CalcDSL) -> int:
         case Lit(a):
             return a
         case Add(a, b):
-            # Intentional error to help demonstrate usefulness of property testing
+            # Intentional error to help demonstrate property testing usefulness
             # return eval(a) * eval(b)
             return eval(a) + eval(b)
         case Mul(a, b):
