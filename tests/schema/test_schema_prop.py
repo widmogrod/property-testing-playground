@@ -5,9 +5,18 @@ import pytest
 from hypothesis import assume, given, note
 from hypothesis import strategies as st
 
-from src.schema.schema import (PBit, PBool, PInt, Schema, SList, SPrimitive,
-                               SVariant, infer_schema_from_list,
-                               infer_schema_from_one, merge_schemas)
+from src.schema.schema import (
+    PBit,
+    PBool,
+    PInt,
+    Schema,
+    SList,
+    SPrimitive,
+    SVariant,
+    infer_schema_from_list,
+    infer_schema_from_one,
+    merge_schemas,
+)
 
 
 def assert_never(x: NoReturn) -> NoReturn:
