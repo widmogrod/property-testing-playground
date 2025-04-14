@@ -45,6 +45,7 @@ def test_that_dont_test_implementation_but_it_looks_like(
         # yield
         raise ConnectionError("Connection failed")
 
+    # PT012 pytest.raises() block should contain a single simple statement
     with pytest.raises(ConnectionError, match="Connection failed"):
         # Use the current module reference
         with patch.object(
@@ -62,7 +63,6 @@ def test_that_dont_test_implementation_but_it_looks_like(
             assert "Failed to connect to the database" in caplog.text
 
 
-
 # def test_that_test_implementation(mock_service, caplog):
 #     caplog.set_level(logging.ERROR)
 #
@@ -77,3 +77,10 @@ def test_that_dont_test_implementation_but_it_looks_like(
 #
 #
 #     assert "Failed to connect to the database" in caplog.text
+
+
+# Solutions to this issue:
+# - code coverage will show that except block is not tested
+# - mutation testing would reveal test issues
+# - linters like flake8-pytest-style and mypy would complain
+# - TDD would prevent this issue
