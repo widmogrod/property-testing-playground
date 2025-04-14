@@ -15,8 +15,22 @@ repos:
       # Run the formatter.
       - id: ruff-format
 
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.2.0
+    hooks:
+      - id: flake8
+        additional_dependencies: [ "flake8-pytest-style==2.1.0" ]
+
+  - repo: https://github.com/PyCQA/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        language: python
+        types:
+          - python
+
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: "v1.15.0"
     hooks:
       - id: mypy
-        args: [--strict, --ignore-missing-imports]
+        args: [ --strict, --ignore-missing-imports ]
